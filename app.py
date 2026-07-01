@@ -25,9 +25,7 @@ def to_bool(value):
 
 
 def build_config():
-    # --------------------
     # 1. Defaults
-    # --------------------
     cfg = {
         "port": 8000,
         "workers": 1,
@@ -36,20 +34,12 @@ def build_config():
         "api_key": "default-secret-000",
     }
 
-    # --------------------
     # 2. YAML
-    # --------------------
-    env_name = os.getenv("APP_ENV", "development")
-    yaml_file = f"config.{env_name}.yaml"
+    if os.path.exists("config.development.yaml"):
+        with open("config.development.yaml") as f:
+            cfg.update(yaml.safe_load(f) or {})
 
-    if os.path.exists(yaml_file):
-        with open(yaml_file, "r") as f:
-            data = yaml.safe_load(f) or {}
-            cfg.update(data)
-
-    # --------------------
     # 3. .env
-    # --------------------
     env = dotenv_values(".env")
 
     if "APP_PORT" in env:
@@ -58,35 +48,13 @@ def build_config():
     if "NUM_WORKERS" in env:
         cfg["workers"] = int(env["NUM_WORKERS"])
 
-    if "APP_WORKERS" in env:
-        cfg["workers"] = int(env["APP_WORKERS"])
-
-    if "APP_DEBUG" in env:
-        cfg["debug"] = to_bool(env["APP_DEBUG"])
-
     if "APP_LOG_LEVEL" in env:
         cfg["log_level"] = env["APP_LOG_LEVEL"]
 
-    if "APP_API_KEY" in env:
-        cfg["api_key"] = env["APP_API_KEY"]
-
-    # --------------------
-    # 4. OS Environment
-    # --------------------
-    if "APP_PORT" in os.environ:
-        cfg["port"] = int(os.environ["APP_PORT"])
-
-    if "APP_WORKERS" in os.environ:
-        cfg["workers"] = int(os.environ["APP_WORKERS"])
-
-    if "APP_DEBUG" in os.environ:
-        cfg["debug"] = to_bool(os.environ["APP_DEBUG"])
-
-    if "APP_LOG_LEVEL" in os.environ:
-        cfg["log_level"] = os.environ["APP_LOG_LEVEL"]
-
-    if "APP_API_KEY" in os.environ:
-        cfg["api_key"] = os.environ["APP_API_KEY"]
+    # 4. Assigned OS environment layer
+    cfg["port"] = int(os.getenv("APP_PORT", "8037"))
+    cfg["workers"] = int(os.getenv("APP_WORKERS", "10"))
+    cfg["log_level"] = os.getenv("APP_LOG_LEVEL", "debug")
 
     return cfg
 
